@@ -3,3 +3,4 @@ export * from "./economy";
 export * from "./inventory";
 export * from "./academics";
 export * from "./social";
+export * from "./admin";
