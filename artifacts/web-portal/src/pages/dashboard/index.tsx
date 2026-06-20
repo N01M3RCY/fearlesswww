@@ -8,9 +8,12 @@ import HouseCupPage from "./house-cup";
 import ConfigPage from "./config";
 import PanelUsersPage from "./panel-users";
 import ApplicationsPage from "./applications";
+import AcademicPage from "./academic";
+import SpellsPage from "./spells";
+import ShopPage from "./shop";
 import { api } from "../../lib/api";
 
-type Tab = "stats" | "users" | "salary" | "house-cup" | "config" | "panel-users" | "applications";
+type Tab = "stats" | "users" | "salary" | "house-cup" | "config" | "panel-users" | "applications" | "academic" | "spells" | "shop";
 
 interface AdminUser { username: string; role: string; displayName: string }
 
@@ -40,18 +43,21 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const ROLE_LEVELS: Record<string, number> = { admin: 100, mod: 50, professor: 30, guide: 20 };
+  const ROLE_LEVELS: Record<string, number> = { admin: 100, mod: 50, professor: 30, guide: 20, student: 10 };
   const userLevel = ROLE_LEVELS[user.role] ?? 0;
 
   function renderPage() {
     switch (activeTab) {
       case "stats": return <StatsPage />;
       case "users": return <UsersPage userRole={user!.role} />;
+      case "academic": return <AcademicPage userRole={user!.role} />;
+      case "spells": return userLevel >= 100 ? <SpellsPage /> : <Denied />;
+      case "shop": return userLevel >= 100 ? <ShopPage /> : <Denied />;
       case "salary": return userLevel >= 100 ? <SalaryPage /> : <Denied />;
       case "house-cup": return <HouseCupPage userRole={user!.role} />;
       case "config": return userLevel >= 100 ? <ConfigPage /> : <Denied />;
       case "panel-users": return userLevel >= 100 ? <PanelUsersPage /> : <Denied />;
-      case "applications": return userLevel >= 50 ? <ApplicationsPage /> : <Denied />;
+      case "applications": return userLevel >= 20 ? <ApplicationsPage userRole={user!.role} /> : <Denied />;
       default: return <StatsPage />;
     }
   }

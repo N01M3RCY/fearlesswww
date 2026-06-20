@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
 import { db, charactersTable, wandSpellLogTable } from "@workspace/db";
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, and } from "drizzle-orm";
 import { createEmbed, COLORS } from "../embed";
 import { CONFIG } from "../config";
 
@@ -164,6 +164,30 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     const targetUser = interaction.options.getUser("hedef");
     const isDark = interaction.options.getBoolean("karanlik") ?? false;
 
+    const [char] = await db.select().from(charactersTable).where(eq(charactersTable.discordId, interaction.user.id));
+    if (!char) {
+      await interaction.reply({ embeds: [createEmbed("❌ Hata", "Kayıtlı karakterin bulunamadı.", COLORS.error)], ephemeral: true });
+      return;
+    }
+
+    if (!char.wandWood || !char.wandCore) {
+      await interaction.reply({ embeds: [createEmbed("❌ Asan Yok", "Bir asan olmadan büyü yapamazsın! Marketten bir asa edinmelisin.", COLORS.error)], ephemeral: true });
+      return;
+    }
+
+    const { characterSpellsTable } = await import("@workspace/db");
+    const [learned] = await db.select().from(characterSpellsTable).where(
+      and(
+        eq(characterSpellsTable.discordId, interaction.user.id),
+        eq(characterSpellsTable.spellName, spell)
+      )
+    );
+
+    if (!learned) {
+      await interaction.reply({ embeds: [createEmbed("❌ Büyü Öğrenilmemiş", `**${spell}** büyüsünü henüz öğrenmemişsin! /buyu-ogren komutu ile öğrenebilirsin.`, COLORS.error)], ephemeral: true });
+      return;
+    }
+
     await db.insert(wandSpellLogTable).values({
       discordId: interaction.user.id,
       spell,
@@ -172,7 +196,7 @@ export async function execute(interaction: ChatInputCommandInteraction): Promise
     });
 
     await interaction.reply({
-      embeds: [createEmbed("✨ Büyü Kaydedildi", `**${spell}** asana kaydedildi.`, COLORS.info)],
+      embeds: [createEmbed("✨ Büyü Kaydedildi", `**${spell}** asana kaydedildi ve başarıyla yapıldı.`, COLORS.success)],
       ephemeral: true
     });
   }

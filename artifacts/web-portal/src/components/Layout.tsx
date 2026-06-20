@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { api } from "../lib/api";
 
-type Tab = "stats" | "users" | "salary" | "house-cup" | "config" | "panel-users" | "applications";
+type Tab = "stats" | "users" | "salary" | "house-cup" | "config" | "panel-users" | "applications" | "academic" | "spells" | "shop";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -14,14 +14,20 @@ interface LayoutProps {
 const NAV: { id: Tab; label: string; icon: string; minRole?: string }[] = [
   { id: "stats", label: "Genel Bakış", icon: "📊" },
   { id: "users", label: "Karakterler", icon: "🧙" },
+  { id: "academic", label: "Akademik", icon: "🏫", minRole: "student" },
+  { id: "applications", label: "Başvurular", icon: "📜", minRole: "guide" },
+  { id: "spells", label: "Büyü Yönetimi", icon: "🪄", minRole: "admin" },
+  { id: "shop", label: "Market Yönetimi", icon: "🏪", minRole: "admin" },
   { id: "salary", label: "Maaş Sistemi", icon: "💰", minRole: "admin" },
   { id: "house-cup", label: "Bina Kupası", icon: "🏆" },
-  { id: "applications", label: "Başvurular", icon: "📜", minRole: "mod" },
   { id: "config", label: "Bot Ayarları", icon: "⚙️", minRole: "admin" },
   { id: "panel-users", label: "Panel Kullanıcıları", icon: "🔑", minRole: "admin" },
 ];
 
-const ROLE_LEVELS: Record<string, number> = { admin: 100, mod: 50, professor: 30, guide: 20 };
+const ROLE_LEVELS: Record<string, number> = { admin: 100, mod: 50, professor: 30, guide: 20, student: 10 };
+
+// ... inside Layout render:
+const ROLE_LABELS: Record<string, string> = { admin: "Baş Büyücü", mod: "Moderatör", professor: "Profesör", guide: "Kılavuz", student: "Öğrenci" };
 
 export default function Layout({ children, activeTab, userRole = "guide", userName = "" }: LayoutProps) {
   const [, setLocation] = useLocation();
@@ -39,8 +45,6 @@ export default function Layout({ children, activeTab, userRole = "guide", userNa
     if (!n.minRole) return true;
     return userLevel >= (ROLE_LEVELS[n.minRole] ?? 0);
   });
-
-  const ROLE_LABELS: Record<string, string> = { admin: "Baş Büyücü", mod: "Moderatör", professor: "Profesör", guide: "Kılavuz" };
 
   return (
     <div className="min-h-screen bg-[#0a0a0f] flex"

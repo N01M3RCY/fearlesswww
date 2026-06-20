@@ -5,6 +5,8 @@ import session from "express-session";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
+import path from "path";
+
 const app: Express = express();
 
 app.use(
@@ -44,5 +46,18 @@ app.use(
 );
 
 app.use("/api", router);
+
+// Serve React Web Portal static assets
+const staticPath = path.resolve(__dirname, "../../web-portal/dist/public");
+app.use(express.static(staticPath));
+
+// Fallback wildcard routing for React Router SPA
+app.get("*", (req, res) => {
+  res.sendFile(path.join(staticPath, "index.html"), (err) => {
+    if (err) {
+      res.status(404).send("Not found");
+    }
+  });
+});
 
 export default app;

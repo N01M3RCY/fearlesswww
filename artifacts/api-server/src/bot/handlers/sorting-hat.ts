@@ -368,11 +368,21 @@ export async function handleSortingApproval(interaction: ButtonInteraction): Pro
       if (bloodRole) await member.roles.add(bloodRole).catch(() => {});
 
       const genderRoleName = app.gender === "Cadı" ? CONFIG.roles.cadi : CONFIG.roles.buyucu;
-      const genderRole = guild.roles.cache.find(r => r.name === genderRoleName);
+      const genderRole = guild.roles.cache.get(genderRoleName) || guild.roles.cache.find(r => r.name === genderRoleName);
       if (genderRole) await member.roles.add(genderRole).catch(() => {});
 
-      const yearRole = guild.roles.cache.find(r => r.name === CONFIG.roles.firstYear);
+      const yearRole = guild.roles.cache.get(CONFIG.roles.firstYear) || guild.roles.cache.find(r => r.name === CONFIG.roles.firstYear);
       if (yearRole) await member.roles.add(yearRole).catch(() => {});
+
+      // Kayıtsız rolünü çıkar ve Tanıtım Yazılmadı rolünü ekle
+      if (CONFIG.roles.unregistered) {
+        const unregRole = guild.roles.cache.get(CONFIG.roles.unregistered) || guild.roles.cache.find(r => r.name === CONFIG.roles.unregistered);
+        if (unregRole) await member.roles.remove(unregRole).catch(() => {});
+      }
+      if (CONFIG.roles.introNotWritten) {
+        const introNotWrittenRole = guild.roles.cache.get(CONFIG.roles.introNotWritten) || guild.roles.cache.find(r => r.name === CONFIG.roles.introNotWritten);
+        if (introNotWrittenRole) await member.roles.add(introNotWrittenRole).catch(() => {});
+      }
 
       await member.setNickname(`${app.oocName} | ${app.oocAge}`).catch(() => {});
     }
@@ -433,6 +443,21 @@ export async function handleIntroApproval(interaction: ButtonInteraction): Promi
 
   await db.update(characterIntroTable).set({ status: "onaylandi", reviewedBy: interaction.user.id, reviewedAt: new Date() }).where(eq(characterIntroTable.id, introId));
   await db.update(charactersTable).set({ icName: intro.icName, icAge: intro.icAge, icStory: intro.icStory, icStoryApproved: true }).where(eq(charactersTable.discordId, intro.discordId));
+
+  // Tanıtım yazılmadı rolünü kaldır
+  const guild = interaction.guild;
+  if (guild) {
+    try {
+      await guild.members.fetch();
+      const member = guild.members.cache.get(intro.discordId);
+      if (member && CONFIG.roles.introNotWritten) {
+        const introNotWrittenRole = guild.roles.cache.get(CONFIG.roles.introNotWritten) || guild.roles.cache.find(r => r.name === CONFIG.roles.introNotWritten);
+        if (introNotWrittenRole) await member.roles.remove(introNotWrittenRole).catch(() => {});
+      }
+    } catch (err) {
+      console.error("Intro approval role error:", err);
+    }
+  }
 
   const [char] = await db.select().from(charactersTable).where(eq(charactersTable.discordId, intro.discordId));
   await interaction.update({ components: [] });

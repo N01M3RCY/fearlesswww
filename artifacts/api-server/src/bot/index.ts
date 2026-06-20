@@ -33,11 +33,13 @@ import * as yetCmd from "./commands/yetenek-agaci";
 import * as tanitimCmd from "./commands/karakter-tanitim";
 import * as cezaCmd from "./commands/ceza";
 import * as setupCmd from "./commands/setup";
+import * as buyuOgrenCmd from "./commands/buyu-ogren";
+import * as dersBitirCmd from "./commands/ders-bitir";
 
 const allCommands = [
   kimlikCmd, profilCmd, bakiyeCmd, oocCmd, marketCmd, satinAlCmd,
   akademiCmd, dersAcCmd, sinavCmd, puanCmd, baykusCmd, asaCmd,
-  yetCmd, tanitimCmd, cezaCmd, setupCmd,
+  yetCmd, tanitimCmd, cezaCmd, setupCmd, buyuOgrenCmd, dersBitirCmd,
 ];
 
 for (const cmd of allCommands) {
